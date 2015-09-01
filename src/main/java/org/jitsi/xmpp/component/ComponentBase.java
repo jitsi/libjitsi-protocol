@@ -59,18 +59,18 @@ public abstract class ComponentBase
     /**
      * How often pings will be sent. -1 disables ping checks.
      */
-    private final long pingInterval;
+    private long pingInterval = -1;
 
     /**
      * How long are we going to wait for ping response in ms.
      */
-    private final long pingTimeout;
+    private long pingTimeout;
 
     /**
      * FIXME find best value, possibly 1 or 2, but using 3 for the start
      * After how many failures we will consider the connection broken.
      */
-    private final int pingThreshold;
+    private int pingThreshold;
 
     /**
      * Map holding ping timeout tasks...
@@ -91,14 +91,34 @@ public abstract class ComponentBase
     private Timer pingTimer;
 
     /**
-     * Creates new instance.
-     * @param config <tt>ConfigurationService</tt> instance.
+     * Indicates if the component has been started.
+     *
+     * FIXME not 100% sure yet, but probably in order to detect connection
+     *       failure it is enough to check only if the component has been
+     *       started and do not send pings at all.
+     */
+    private boolean started;
+
+    /**
+     * Default constructor for <tt>ComponentBase</tt>.
+     */
+    public ComponentBase()
+    {
+        ProviderManager.getInstance().addIQProvider(
+            "ping", "urn:xmpp:ping",
+            new KeepAliveEventProvider());
+    }
+
+    /**
+     * Loads component configuration.
+     * @param config <tt>ConfigurationService</tt> instance used to obtain
+     *               component's configuration properties.
      * @param configPropertiesBase config properties base string used to
      *        construct full names. To this string dot + config property name
      *        will be added. Example: "org.jitsi.jicofo" + "." + PING_INTERVAL
      */
-    public ComponentBase(ConfigurationService config,
-                         String               configPropertiesBase)
+    protected void loadConfig(ConfigurationService config,
+                              String configPropertiesBase)
     {
         configPropertiesBase += ".";
 
@@ -117,18 +137,21 @@ public abstract class ComponentBase
         logger.info("  ping threshold: " + pingThreshold);
     }
 
-    /**
-     * Starts the components.
-     */
     @Override
-    public void start()
+    public void postComponentStart()
     {
-        super.start();
+        super.postComponentStart();
 
-        ProviderManager.getInstance().addIQProvider(
-            "ping", "urn:xmpp:ping",
-            new KeepAliveEventProvider());
+        started = true;
 
+        startPingTask();
+    }
+
+    /**
+     * Starts ping timer task.
+     */
+    protected void startPingTask()
+    {
         if (pingInterval > 0)
         {
             pingTimer = new Timer();
@@ -137,11 +160,21 @@ public abstract class ComponentBase
     }
 
     /**
+     * Returns <tt>true</tt> if ping timer task is running.
+     */
+    protected boolean isPingTaskStarted()
+    {
+        return pingTimer != null;
+    }
+
+    /**
      * Called before component's request queue is cleared.
      */
     @Override
     public void preComponentShutdown()
     {
+        started = false;
+
         super.preComponentShutdown();
 
         if (pingTimer != null)
@@ -157,6 +190,9 @@ public abstract class ComponentBase
      */
     public boolean isConnectionAlive()
     {
+        if (!started)
+            return false;
+
         synchronized (timeouts)
         {
             return pingFailures < pingThreshold;
