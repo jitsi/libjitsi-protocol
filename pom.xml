@@ -11,7 +11,7 @@
     <relativePath>../jitsi-universe/pom.xml</relativePath>
   </parent>
 
-  <artifactId>libjitsi-protocol</artifactId>
+  <artifactId>jitsi-libjitsi-protocol</artifactId>
   <version>1.0-SNAPSHOT</version>
   <packaging>jar</packaging>
 
