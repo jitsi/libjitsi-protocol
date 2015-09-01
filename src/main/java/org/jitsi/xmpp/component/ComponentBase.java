@@ -41,16 +41,6 @@ public abstract class ComponentBase
     private final static Logger logger = Logger.getLogger(ComponentBase.class);
 
     /**
-     * Prefix for configuration properties used to configure implementing class.
-     * Component's name is passed in the constructor which will be appended
-     * to this property value. Config properties names are added after the
-     * component's name:
-     * CONFIG_PROPERTY_BASE + "." + component name + "." + config property
-     */
-    private final static String CONFIG_PROPERTY_BASE
-        = "org.jitsi.xmpp.component";
-
-    /**
      * The name of the property which configures ping interval in ms. -1 to
      * disable pings.
      */
@@ -103,21 +93,25 @@ public abstract class ComponentBase
     /**
      * Creates new instance.
      * @param config <tt>ConfigurationService</tt> instance.
-     * @param componentName the name of the component which will be used to
-     *                      construct config properties names.
+     * @param configPropertiesBase config properties base string used to
+     *        construct full names. To this string dot + config property name
+     *        will be added. Example: "org.jitsi.jicofo" + "." + PING_INTERVAL
      */
-    public ComponentBase(ConfigurationService config, String componentName)
+    public ComponentBase(ConfigurationService config,
+                         String               configPropertiesBase)
     {
-        String configBase
-            = CONFIG_PROPERTY_BASE + "." + componentName + ".";
+        configPropertiesBase += ".";
 
-        pingInterval = config.getLong(configBase + PING_INTERVAL_PNAME, 10000L);
+        pingInterval = config.getLong(
+            configPropertiesBase + PING_INTERVAL_PNAME, 10000L);
 
-        pingTimeout = config.getLong(configBase + PING_TIMEOUT_PNAME, 5000L);
+        pingTimeout = config.getLong(
+            configPropertiesBase + PING_TIMEOUT_PNAME, 5000L);
 
-        pingThreshold = config.getInt(configBase + pingTimeout, 3);
+        pingThreshold = config.getInt(
+            configPropertiesBase + PING_THRESHOLD_PNAME, 3);
 
-        logger.info("Component " + componentName  + " config: ");
+        logger.info("Component " + configPropertiesBase  + " config: ");
         logger.info("  ping interval: " + pingInterval + " ms");
         logger.info("  ping timeout: " + pingTimeout + " ms");
         logger.info("  ping threshold: " + pingThreshold);
