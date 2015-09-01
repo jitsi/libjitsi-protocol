@@ -285,6 +285,98 @@ public final class IQUtils
         return org.jivesoftware.smack.packet.IQ.Type.fromString(type.name());
     }
 
+    /**
+     * Methods used for IQProvider testing. Parses given XML string with given
+     * <tt>IQProvider</tt>.
+     * @param iqStr XML string to be parsed
+     * @param iqProvider the IQProvider which will be used to parse the IQ.
+     * @return the IQ parsed from given <tt>iqStr</tt> if parsable by given
+     *         <tt>iqProvider</tt>.
+     * @throws Exception if anything goes wrong
+     */
+    public static org.jivesoftware.smack.packet.IQ parse(
+        String iqStr,
+        IQProvider iqProvider)
+        throws Exception
+    {
+        org.jivesoftware.smack.packet.IQ smackIQ = null;
+
+        if (iqProvider != null)
+        {
+            XmlPullParserFactory xmlPullParserFactory;
+
+            synchronized (IQUtils.class)
+            {
+                if (IQUtils.xmlPullParserFactory == null)
+                {
+                    IQUtils.xmlPullParserFactory
+                        = XmlPullParserFactory.newInstance();
+                    IQUtils.xmlPullParserFactory.setNamespaceAware(true);
+                }
+                xmlPullParserFactory = IQUtils.xmlPullParserFactory;
+            }
+
+            XmlPullParser parser = xmlPullParserFactory.newPullParser();
+
+            parser.setInput(new StringReader(iqStr));
+
+            int eventType = parser.next();
+
+            if (XmlPullParser.START_TAG == eventType)
+            {
+                String name = parser.getName();
+
+                if ("iq".equals(name))
+                {
+                    String packetId = parser.getAttributeValue("", "id");
+                    String from = parser.getAttributeValue("", "from");
+                    String to = parser.getAttributeValue("", "to");
+                    String type = parser.getAttributeValue("", "type");
+
+                    eventType = parser.next();
+                    if (XmlPullParser.START_TAG == eventType)
+                    {
+                        smackIQ = iqProvider.parseIQ(parser);
+
+                        if (smackIQ != null)
+                        {
+                            eventType = parser.getEventType();
+                            if (XmlPullParser.END_TAG != eventType)
+                            {
+                                throw new IllegalStateException(
+                                    Integer.toString(eventType)
+                                        + " != XmlPullParser.END_TAG");
+                            }
+
+                            smackIQ.setType(
+                                org.jivesoftware.smack.packet.IQ.Type
+                                    .fromString(type));
+                            smackIQ.setPacketID(packetId);
+                            smackIQ.setFrom(from);
+                            smackIQ.setTo(to);
+                        }
+                    }
+                    else
+                    {
+                        throw new IllegalStateException(
+                            Integer.toString(eventType)
+                                + " != XmlPullParser.START_TAG");
+                    }
+                }
+                else
+                    throw new IllegalStateException(name + " != iq");
+            }
+            else
+            {
+                throw new IllegalStateException(
+                    Integer.toString(eventType)
+                        + " != XmlPullParser.START_TAG");
+            }
+        }
+
+        return smackIQ;
+    }
+
     /** Prevents the initialization of new <tt>IQUtils</tt> instances. */
     private IQUtils()
     {
