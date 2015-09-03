@@ -290,6 +290,11 @@ public abstract class ComponentBase
                 pingFailures++;
 
                 logger.error("Ping timeout for ID: " + packetId);
+
+                synchronized (timeouts)
+                {
+                    timeouts.remove(packetId);
+                }
             }
         }
     }
