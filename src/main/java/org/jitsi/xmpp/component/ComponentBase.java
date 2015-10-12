@@ -32,6 +32,7 @@ import java.util.*;
  *
  * @author Pawel Domas
  */
+@SuppressWarnings("unused")
 public abstract class ComponentBase
     extends AbstractComponent
 {
@@ -55,6 +56,34 @@ public abstract class ComponentBase
      * The name of the property which configures {@link #pingThreshold}.
      */
     private final static String PING_THRESHOLD_PNAME = "PING_THRESHOLD";
+
+    /**
+     * The hostname or IP address to which this component will be connected.
+     */
+    private final String hostname;
+
+    /**
+     * The port of XMPP server to which this component will connect.
+     */
+    private final int port;
+
+    /**
+     * The name of main XMPP domain on which this component will be served.
+     */
+    private final String domain;
+
+    /**
+     * The name of subdomain on which this component will be available.
+     * So the JID of component will be constructed as follows:<br/>
+     * {@link #domain} + ". " + <tt>subdomain</tt><br/>
+     * eg. "jicofo" + "." + "example.com" = "jicofo.example.com"
+     */
+    private final String subdomain;
+
+    /**
+     * Password used by the component to authenticate with XMPP server.
+     */
+    private final String secret;
 
     /**
      * How often pings will be sent. -1 disables ping checks.
@@ -101,12 +130,30 @@ public abstract class ComponentBase
 
     /**
      * Default constructor for <tt>ComponentBase</tt>.
+     * @param host the hostname or IP address to which this component will be
+     *             connected.
+     * @param port the port of XMPP server to which this component will connect.
+     * @param domain the name of main XMPP domain on which this component will
+     *               be served.
+     * @param subDomain the name of subdomain on which this component will be
+     *                  available.
+     * @param secret the password used by the component to authenticate with
+     *               XMPP server.
      */
-    public ComponentBase()
+    public ComponentBase(String          host,
+                         int             port,
+                         String        domain,
+                         String     subDomain,
+                         String        secret)
     {
         ProviderManager.getInstance().addIQProvider(
-            "ping", "urn:xmpp:ping",
-            new KeepAliveEventProvider());
+            "ping", "urn:xmpp:ping", new KeepAliveEventProvider());
+
+        this.hostname = host;
+        this.port = port;
+        this.domain = domain;
+        this.subdomain = subDomain;
+        this.secret = secret;
     }
 
     /**
@@ -135,6 +182,25 @@ public abstract class ComponentBase
         logger.info("  ping interval: " + pingInterval + " ms");
         logger.info("  ping timeout: " + pingTimeout + " ms");
         logger.info("  ping threshold: " + pingThreshold);
+    }
+
+    /**
+     * Method should be called before this component is going to be used for the
+     * first time. As contrary to {@link #postComponentStart()} is called every
+     * time the component connects to XMPP server.
+     */
+    public void init()
+    {
+
+    }
+
+    /**
+     * Call this method in order to release all resources used by this component.
+     * After that this instance should be ready for garbage collection.
+     */
+    public void dispose()
+    {
+
     }
 
     @Override
@@ -215,6 +281,49 @@ public abstract class ComponentBase
                 pingFailures = 0;
             }
         }
+    }
+
+    /**
+     * Returns the hostname or IP address to which this component will be
+     * connected.
+     */
+    public String getHostname()
+    {
+        return hostname;
+    }
+
+    /**
+     * Returns the port of XMPP server to which this component will connect.
+     */
+    public int getPort()
+    {
+        return port;
+    }
+
+    /**
+     * Returns the name of main XMPP domain on which this component will be
+     * served.
+     */
+    public String getDomain()
+    {
+        return domain;
+    }
+
+    /**
+     * Returns the name of subdomain on which this component will be available.
+     */
+    public String getSubdomain()
+    {
+        return subdomain;
+    }
+
+    /**
+     * Returns the password used by the component to authenticate with XMPP
+     * server.
+     */
+    public String getSecret()
+    {
+        return secret;
     }
 
     /**
