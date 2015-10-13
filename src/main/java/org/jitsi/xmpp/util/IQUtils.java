@@ -169,14 +169,6 @@ public final class IQUtils
                             else if (smackIQ == null && iqProvider != null)
                             {
                                 smackIQ = iqProvider.parseIQ(parser);
-                                if (smackIQ != null
-                                        && XmlPullParser.END_TAG
-                                                != parser.getEventType())
-                                {
-                                    throw new IllegalStateException(
-                                        Integer.toString(eventType)
-                                            + " != XmlPullParser.END_TAG");
-                                }
                             }
                         }
                         else if ((XmlPullParser.END_TAG == eventType
