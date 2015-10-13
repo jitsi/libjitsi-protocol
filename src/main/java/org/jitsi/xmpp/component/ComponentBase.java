@@ -338,7 +338,7 @@ public abstract class ComponentBase
             {
                 String domain = getDomain();
 
-                domain = domain.substring(domain.indexOf(".") + 1);
+                // domain = domain.substring(domain.indexOf(".") + 1);
 
                 KeepAliveEvent ping = new KeepAliveEvent(null, domain);
 
