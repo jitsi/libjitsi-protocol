@@ -146,9 +146,6 @@ public abstract class ComponentBase
                          String     subDomain,
                          String        secret)
     {
-        ProviderManager.getInstance().addIQProvider(
-            "ping", "urn:xmpp:ping", new KeepAliveEventProvider());
-
         this.hostname = host;
         this.port = port;
         this.domain = domain;
@@ -220,6 +217,9 @@ public abstract class ComponentBase
     {
         if (pingInterval > 0)
         {
+            ProviderManager.getInstance().addIQProvider(
+                "ping", "urn:xmpp:ping", new KeepAliveEventProvider());
+
             pingTimer = new Timer();
             pingTimer.schedule(new PingTask(), pingInterval, pingInterval);
         }
